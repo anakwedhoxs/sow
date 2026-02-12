@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Notifications\Notification;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class SOWResource extends Resource
 {
@@ -190,18 +191,21 @@ class SOWResource extends Resource
 
                     $filters = $table->getFiltersForm()->getState();
 
-                    // 🔑 AMBIL VALUE PERTAMA DARI ARRAY
                     $divisi = $filters['divisi'] ?? null;
 
                     if (is_array($divisi)) {
-                        $divisi = reset($divisi); // ⬅️ INI KUNCI UTAMANYA
+                        $divisi = reset($divisi);
                     }
+
+                    $tanggal = now()->format('d-m-Y');
+                    $namaFile = "data-sow-{$tanggal}.xlsx";
 
                     return Excel::download(
                         new SowExport($divisi),
-                        'data-sow.xlsx'
+                        $namaFile
                     );
                 }),
+
 
                             /* ===== ACCEPT ALL ===== */
                 Action::make('accept_all')

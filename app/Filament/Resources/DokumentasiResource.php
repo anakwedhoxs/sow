@@ -15,6 +15,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Notifications\Notification;
 use Maatwebsite\Excel\Facades\Excel;
 
+
 class DokumentasiResource extends Resource
 {
     protected static ?string $model = Dokumentasi::class;
@@ -100,15 +101,20 @@ class DokumentasiResource extends Resource
                     }),
 
                 /* ===== EXPORT ===== */
-                Action::make('export')
-                    ->label('Export')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->action(fn () =>
-                        Excel::download(
-                            new DokumentasiExport(),
-                            'data-dokumentasi.xlsx'
-                        )
-                    ),
+               Action::make('export')
+                ->label('Export')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(function () {
+
+                    $tanggal = now()->format('d-m-Y');
+                    $namaFile = "data-dokumentasi-{$tanggal}.xlsx";
+
+                    return Excel::download(
+                        new DokumentasiExport(),
+                        $namaFile
+                    );
+                }),
+
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([

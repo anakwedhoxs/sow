@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 
 class RekapResource extends Resource
@@ -87,11 +88,18 @@ class RekapResource extends Resource
                
 
                 Action::make('export')
-                    ->label('Export Rekap')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->action(fn () =>
-                        Excel::download(new \App\Exports\RekapExport(), 'rekap.xlsx')
-                    ),
+                ->label('Export Rekap')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(function () {
+
+                    $tanggal = now()->format('d-m-Y'); 
+                    $namaFile = "rekapsow-{$tanggal}.xlsx";
+
+                    return Excel::download(
+                        new \App\Exports\RekapExport(),
+                        $namaFile
+                    );
+                }),
 
 
                 Action::make('arsipkan')

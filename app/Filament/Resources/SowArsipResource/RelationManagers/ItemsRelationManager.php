@@ -8,6 +8,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+
 
 class ItemsRelationManager extends RelationManager
 {
@@ -33,26 +35,28 @@ class ItemsRelationManager extends RelationManager
             /* ================= EXPORT BUTTON ================= */
             ->headerActions([
                 Action::make('export')
-                    ->label('Export Excel')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function () {
-                        // Ambil state filter aktif
-                        $filters = $this->getTableFiltersForm()->getState();
+                ->label('Export Excel')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(function () {
 
-                        // Ambil divisi dari filter
-                        $divisi = $filters['divisi'] ?? null;
-                        if (is_array($divisi)) {
-                            $divisi = reset($divisi);
-                        }
+                    $filters = $this->getTableFiltersForm()->getState();
 
-                        // Ambil parent record ID
-                        $arsipId = $this->getOwnerRecord()->id;
+                    $divisi = $filters['divisi'] ?? null;
+                    if (is_array($divisi)) {
+                        $divisi = reset($divisi);
+                    }
 
-                        return Excel::download(
-                            new SowArsipExport($arsipId, $divisi),
-                            'sow-arsip.xlsx'
-                        );
-                    }),
+                    $arsipId = $this->getOwnerRecord()->id;
+
+                    $tanggal = now()->format('d-m-Y');
+                    $namaFile = "data-sow-{$tanggal}.xlsx";
+
+                    return Excel::download(
+                        new SowArsipExport($arsipId, $divisi),
+                        $namaFile
+                    );
+                }),
+
             ])
 
 

@@ -10,6 +10,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DokumentasiArsipExport;
+use Carbon\Carbon;
 
 class ItemsRelationManager extends RelationManager
 {
@@ -37,14 +38,19 @@ class ItemsRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make(),
 
                 Action::make('export')
-                    ->label('Export Dokumentasi Arsip')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function () {
-                        return Excel::download(
-                            new DokumentasiArsipExport($this->ownerRecord->id),
-                            'dokumentasi_arsip.xlsx'
-                        );
-                    }),
+                ->label('Export Dokumentasi Arsip')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(function () {
+
+                    $tanggal = now()->format('d-m-Y');
+                    $namaFile = "dokumentasi_arsip_{$tanggal}.xlsx";
+
+                    return Excel::download(
+                        new DokumentasiArsipExport($this->ownerRecord->id),
+                        $namaFile
+                    );
+                }),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -10,6 +10,7 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use App\Exports\RekapArsipItemExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class ItemsRelationManager extends RelationManager
 {
@@ -69,16 +70,20 @@ class ItemsRelationManager extends RelationManager
                 Tables\Actions\DeleteAction::make(),
             ])
             ->headerActions([
+                
                 Action::make('export')
-                    ->label('Export Rekap')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function () {
-                        $rekapArsipId = $this->getOwnerRecord()->id;
-                        return \Maatwebsite\Excel\Facades\Excel::download(
-                            new \App\Exports\RekapArsipItemExport($rekapArsipId),
-                            'rekap_arsip_items.xlsx'
-                        );
-                    }),
+                ->label('Export Rekap')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(function () {
+
+                    $tanggal = now()->format('d-m-Y'); 
+                    $namaFile = "rekapsow-{$tanggal}.xlsx";
+
+                    return Excel::download(
+                        new \App\Exports\RekapExport(),
+                        $namaFile
+                    );
+                }),
             ]);
 
     }
