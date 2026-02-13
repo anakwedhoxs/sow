@@ -16,7 +16,7 @@ class Sow extends Model
         'hostname',
         'divisi',
         'keterangan',
-        'pic',
+        'pic_id',
         'foto',
         'status',
     ];
