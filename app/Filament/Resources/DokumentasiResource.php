@@ -37,6 +37,7 @@ class DokumentasiResource extends Resource
                 ->disk('public')
                 ->directory('uploads')
                 ->visibility('public')
+                ->downloadable()
                 ->nullable(),
         ]);
     }
@@ -120,6 +121,12 @@ class DokumentasiResource extends Resource
                 Tables\Actions\ActionGroup::make([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('download')
+                    ->label('Download')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(fn($record) => route('dokumentasi.download', $record))
+                    ->openUrlInNewTab(true)
+                    ->visible(fn($record) => !empty($record->foto)),
                 Tables\Actions\DeleteAction::make(),
                 ])
                 ->label('More') 

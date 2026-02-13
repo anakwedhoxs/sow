@@ -53,7 +53,31 @@ class ItemsRelationManager extends RelationManager
 
             ])
             ->actions([
+                Action::make('view')
+                    ->label('View')
+                    ->icon('heroicon-o-eye')
+                    ->form([
+                        Forms\Components\TextInput::make('nama_barang')
+                            ->label('Nama Barang')
+                            ->disabled()
+                            ->default(fn ($record) => $record->nama_barang),
+
+                        Forms\Components\Placeholder::make('foto_preview')
+                            ->label('Foto')
+                            ->content(fn ($record) => $record->foto ? view('filament.image_preview', ['src' => asset('storage/' . $record->foto)]) : 'Tidak ada foto')
+                            ->columnSpan('full'),
+                    ])
+                    ->modalHeading('View dokumentasi arsip item')
+                    ->modalWidth('xl')
+                    ->modalActions([]),
+
                 Tables\Actions\EditAction::make(),
+                Action::make('download')
+                    ->label('Download Foto')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(fn ($record) => $record->foto ? route('dokumentasi-arsip-item.download', $record) : null)
+                    ->openUrlInNewTab(true)
+                    ->visible(fn ($record) => ! empty($record->foto)),
             ])
             ->paginated(false);
     }

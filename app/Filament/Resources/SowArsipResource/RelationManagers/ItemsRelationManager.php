@@ -8,6 +8,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Maatwebsite\Excel\Facades\Excel;
+use Filament\Forms; 
 use Carbon\Carbon;
 
 
@@ -100,6 +101,26 @@ class ItemsRelationManager extends RelationManager
                     ]),
             ])
             ->defaultSort('id', 'desc')
-            ->paginated([10, 25, 50]);
+            ->paginated([10, 25, 50])
+
+             ->actions([ 
+                Tables\Actions\ViewAction::make() 
+                ->label('Lihat Detail') 
+                ->form([
+                     Forms\Components\Select::make('inventaris.Kategori')->label('Hardware')->disabled(), 
+                     Forms\Components\Select::make('inventaris.Merk')->label('Merk')->disabled(), 
+                     Forms\Components\TextInput::make('inventaris.Seri')->label('Seri')->disabled(), 
+                     Forms\Components\DatePicker::make('tanggal_penggunaan')->label('Tanggal Penggunaan')->disabled(), 
+                     Forms\Components\DatePicker::make('tanggal_perbaikan')->label('Tanggal Perbaikan')->disabled(),  
+                     Forms\Components\Checkbox::make('helpdesk')->label('Helpdesk')->disabled(), 
+                     Forms\Components\Checkbox::make('form')->label('Form')->disabled(),
+                     Forms\Components\TextInput::make('nomor_perbaikan')->label('Nomor Perbaikan')->disabled(), 
+                     Forms\Components\TextInput::make('hostname')->label('Hostname')->disabled(), 
+                     Forms\Components\Select::make('divisi')->label('Divisi')->disabled(), 
+                     Forms\Components\Textarea::make('keterangan')->label('Keterangan')->disabled(), 
+                     Forms\Components\TextInput::make('pic')->label('PIC')->disabled(), 
+                     Forms\Components\FileUpload::make('foto')->label('Foto')->disk('public')->disabled(), 
+                     ]), 
+                     ]);
     }
 }
