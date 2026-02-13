@@ -18,6 +18,7 @@ class SowArsipItem extends Model
         'divisi',
         'keterangan',
         'pic',
+        'foto',
 
     ];
 
