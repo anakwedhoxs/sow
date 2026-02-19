@@ -148,11 +148,14 @@ class SOWResource extends Resource
             Forms\Components\Textarea::make('keterangan')->columnSpanFull(),
 
             Forms\Components\FileUpload::make('foto')
-                ->image()
-                ->disk('public')
-                ->directory('uploads')
-                ->visibility('public')
-                ->columnSpanFull(),
+            ->label('Foto')
+            ->image() // preview gambar
+            ->disk('public') // simpan di disk public
+            ->directory('uploads') // folder penyimpanan
+            ->visibility('public') // agar bisa diakses publik
+            ->downloadable() // aktifkan tombol download
+            ->columnSpanFull(),
+
         ]);
     }
 
@@ -227,10 +230,16 @@ class SOWResource extends Resource
 ])
 
             ->actions([
+                Tables\Actions\ActionGroup::make([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                ])
+                ->label('More') 
+                ->icon('heroicon-m-ellipsis-vertical') 
+                ->color('primary')
             ]);
+
     }
 
     public static function getPages(): array
