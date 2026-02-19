@@ -18,18 +18,19 @@ use Maatwebsite\Excel\Facades\Excel;
 class SOWResource extends Resource
 {
     protected static ?string $model = Sow::class;
-
     protected static ?string $navigationIcon = 'heroicon-s-queue-list';
     protected static ?string $navigationLabel = 'Data SOW';
     protected static ?string $navigationGroup = 'SOW';
-    protected static ?int $navigationSort = 1;
 
     /* ================= FORM ================= */
     public static function form(Form $form): Form
     {
         return $form->schema([
+
             Forms\Components\Grid::make(2)->schema([
-                // Hardware (Kategori)
+
+                /* ================= CREATE & EDIT ================= */
+
                 Forms\Components\Select::make('kategori')
                     ->label('Hardware')
                     ->options(
@@ -38,25 +39,18 @@ class SOWResource extends Resource
                             ->distinct()
                             ->pluck('Kategori', 'Kategori')
                     )
+                    ->default(fn ($record) => $record?->inventaris?->Kategori) 
                     ->live()
+                    ->visible(fn ($livewire) =>
+                        $livewire instanceof Pages\CreateSOW ||
+                        $livewire instanceof Pages\EditSOW
+                    )
                     ->afterStateUpdated(function (callable $set) {
                         $set('merk', null);
                         $set('inventaris_id', null);
                     })
-                        ->afterStateHydrated(function (...$args) {
-                            $set = null;
-                            $record = null;
-                            foreach ($args as $a) {
-                                if (is_callable($a)) $set = $a;
-                                if (is_object($a) && method_exists($a, 'getKey')) $record = $a;
-                            }
-                            if ($set && $record) {
-                                $set('kategori', $record->inventaris->Kategori ?? null);
-                            }
-                        })
                     ->required(),
 
-                // Merk
                 Forms\Components\Select::make('merk')
                     ->label('Merk')
                     ->options(fn (callable $get) =>
@@ -67,24 +61,18 @@ class SOWResource extends Resource
                                 ->pluck('Merk', 'Merk')
                             : []
                     )
+                    ->default(fn ($record) => $record?->inventaris?->Merk)
                     ->live()
-                    ->afterStateUpdated(function (callable $set) {
-                        $set('inventaris_id', null);
-                    })
-                        ->afterStateHydrated(function (...$args) {
-                            $set = null;
-                            $record = null;
-                            foreach ($args as $a) {
-                                if (is_callable($a)) $set = $a;
-                                if (is_object($a) && method_exists($a, 'getKey')) $record = $a;
-                            }
-                            if ($set && $record) {
-                                $set('merk', $record->inventaris->Merk ?? null);
-                            }
-                        })
+                    ->dehydrated(false)
+                    ->visible(fn ($livewire) =>
+                        $livewire instanceof Pages\CreateSOW ||
+                        $livewire instanceof Pages\EditSOW
+                    )
+                    ->afterStateUpdated(fn (callable $set) =>
+                        $set('inventaris_id', null)
+                    )
                     ->required(),
 
-                // Seri (Inventaris)
                 Forms\Components\Select::make('inventaris_id')
                     ->label('Seri')
                     ->options(fn (callable $get) =>
@@ -95,9 +83,43 @@ class SOWResource extends Resource
                             : []
                     )
                     ->searchable()
-                    ->required(),
+                    ->required()
+                    ->visible(fn ($livewire) =>
+                        $livewire instanceof Pages\CreateSOW ||
+                        $livewire instanceof Pages\EditSOW
+                    ),
 
-                // PIC
+                /* ================= VIEW MODE ================= */
+
+                Forms\Components\TextInput::make('hardware_view')
+                    ->label('Hardware')
+                    ->default(fn ($record) => $record?->inventaris?->Kategori)
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->visible(fn ($livewire) =>
+                        $livewire instanceof Pages\ViewSOW
+                    ),
+
+                Forms\Components\TextInput::make('merk_view')
+                    ->label('Merk')
+                    ->default(fn ($record) => $record?->inventaris?->Merk)
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->visible(fn ($livewire) =>
+                        $livewire instanceof Pages\ViewSOW
+                    ),
+
+                Forms\Components\TextInput::make('seri_view')
+                    ->label('Seri')
+                    ->default(fn ($record) => $record?->inventaris?->Seri)
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->visible(fn ($livewire) =>
+                        $livewire instanceof Pages\ViewSOW
+                    ),
+
+                /* ================= FIELD LAIN ================= */
+
                 Forms\Components\Select::make('pic_id')
                     ->label('PIC')
                     ->relationship('pic', 'nama')
@@ -123,8 +145,7 @@ class SOWResource extends Resource
                     ->required(),
             ]),
 
-            Forms\Components\Textarea::make('keterangan')
-                ->columnSpanFull(),
+            Forms\Components\Textarea::make('keterangan')->columnSpanFull(),
 
             Forms\Components\FileUpload::make('foto')
                 ->image()
@@ -140,17 +161,15 @@ class SOWResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('inventaris.Kategori')->label('Hardware')->searchable(),
-                Tables\Columns\TextColumn::make('inventaris.Merk')->label('Merk')->searchable(),
-                Tables\Columns\TextColumn::make('inventaris.Seri')->label('Seri')->searchable(),
+                Tables\Columns\TextColumn::make('inventaris.Kategori')->label('Hardware'),
+                Tables\Columns\TextColumn::make('inventaris.Merk')->label('Merk'),
+                Tables\Columns\TextColumn::make('inventaris.Seri')->label('Seri'),
                 Tables\Columns\TextColumn::make('tanggal_penggunaan')->date(),
                 Tables\Columns\TextColumn::make('tanggal_perbaikan')->date(),
-                Tables\Columns\IconColumn::make('helpdesk')->boolean(),
-                Tables\Columns\IconColumn::make('form')->boolean(),
-                Tables\Columns\TextColumn::make('nomor_perbaikan')->searchable(),
-                Tables\Columns\TextColumn::make('hostname')->searchable(),
-                Tables\Columns\TextColumn::make('divisi')->searchable(),
-                Tables\Columns\TextColumn::make('pic.nama')->label('PIC')->default('-')->searchable(),
+                Tables\Columns\TextColumn::make('nomor_perbaikan'),
+                Tables\Columns\TextColumn::make('hostname'),
+                Tables\Columns\TextColumn::make('divisi'),
+             Tables\Columns\TextColumn::make('pic.nama')->label('PIC')->default('-')->searchable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'success' => false,
@@ -168,42 +187,45 @@ class SOWResource extends Resource
                         'PPM' => 'PPM',
                     ]),
             ])
-            ->headerActions([
-                Action::make('export')
-                    ->label('Export')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('primary')
-                    ->action(fn () => Excel::download(new SowExport, 'data-sow.xlsx')),
+        ->headerActions([
+    Action::make('export')
+        ->label('Export')
+        ->icon('heroicon-o-arrow-down-tray')
+        ->color('primary')
+        ->disabled(fn () => Sow::whereNull('status')->orWhere('status', true)->exists())
+        ->action(fn () => Excel::download(new SowExport, 'data-sow.xlsx')),
 
-                Action::make('accept')
-                    ->label('Accept')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->action(function () {
-                        Sow::query()->update(['status' => false]);
-                        Notification::make()
-                            ->title('Semua data berhasil di Accept')
-                            ->success()
-                            ->send();
-                    }),
+    Action::make('accept')
+        ->label('Accept')
+        ->icon('heroicon-o-check-circle')
+        ->color('success')
+        ->requiresConfirmation()
+        ->action(function () {
+            Sow::query()->update(['status' => false]);
+            Notification::make()
+                ->title('Semua data berhasil di Accept')
+                ->success()
+                ->send();
+        }),
 
-                Action::make('arsip')
-                    ->label('Arsip')
-                    ->icon('heroicon-o-archive-box')
-                    ->color('warning')
-                    ->requiresConfirmation()
-                    ->action(function () {
-                        Sow::query()->update([
-                            'is_archived' => true,
-                            'arsip_at' => now(),
-                        ]);
-                        Notification::make()
-                            ->title('Semua data berhasil di Arsipkan')
-                            ->success()
-                            ->send();
-                    }),
-            ])
+    Action::make('arsip')
+        ->label('Arsip')
+        ->icon('heroicon-o-archive-box')
+        ->color('warning')
+        ->disabled(fn () => Sow::whereNull('status')->orWhere('status', true)->exists())
+        ->requiresConfirmation()
+        ->action(function () {
+            Sow::query()->update([
+                'is_archived' => true,
+                'arsip_at' => now(),
+            ]);
+            Notification::make()
+                ->title('Semua data berhasil di Arsipkan')
+                ->success()
+                ->send();
+        }),
+])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
@@ -216,6 +238,7 @@ class SOWResource extends Resource
         return [
             'index' => Pages\ListSOWS::route('/'),
             'create' => Pages\CreateSOW::route('/create'),
+            'view' => Pages\ViewSOW::route('/{record}'),
             'edit' => Pages\EditSOW::route('/{record}/edit'),
         ];
     }
