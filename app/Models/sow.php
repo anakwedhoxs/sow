@@ -45,6 +45,11 @@ class Sow extends Model
     {
         return $this->belongsTo(Pic::class);
     }
+
+    public function hostname(): BelongsTo
+{
+    return $this->belongsTo(Hostname::class);
+}
 }
 
 

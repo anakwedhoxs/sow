@@ -134,7 +134,12 @@ class SOWResource extends Resource
                 Forms\Components\TextInput::make('nomor_perbaikan'),
                 Forms\Components\Checkbox::make('helpdesk'),
                 Forms\Components\Checkbox::make('form'),
-                Forms\Components\TextInput::make('hostname'),
+                Forms\Components\Select::make('hostname_id')
+                    ->label('Hostname')
+                    ->relationship('hostname', 'nama')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
 
                 Forms\Components\Select::make('divisi')
                     ->options([
@@ -172,7 +177,10 @@ class SOWResource extends Resource
                 Tables\Columns\TextColumn::make('tanggal_penggunaan')->date(),
                 Tables\Columns\TextColumn::make('tanggal_perbaikan')->date(),
                 Tables\Columns\TextColumn::make('nomor_perbaikan'),
-                Tables\Columns\TextColumn::make('hostname'),
+                Tables\Columns\TextColumn::make('hostname.nama')
+                    ->label('Hostname')
+                    ->default('-')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('divisi'),
                 Tables\Columns\TextColumn::make('pic.nama')->label('PIC')->default('-')->searchable(),
                 Tables\Columns\BadgeColumn::make('status')
