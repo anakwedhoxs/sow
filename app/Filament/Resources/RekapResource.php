@@ -78,10 +78,6 @@ class RekapResource extends Resource
                 Tables\Columns\TextColumn::make('jumlah')
                     ->label('Jumlah')
                     ->numeric(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime('d M Y H:i')
-                    ->sortable(),
             ])
             ->actions([
                 
