@@ -6,6 +6,8 @@ use App\Filament\Resources\SOWResource\Pages;
 use App\Models\Sow;
 use App\Models\Inventaris;
 use App\Exports\SowExport;
+use App\Models\SowArsip;
+use App\Models\SowArsipItem;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -172,7 +174,7 @@ class SOWResource extends Resource
                 Tables\Columns\TextColumn::make('nomor_perbaikan'),
                 Tables\Columns\TextColumn::make('hostname'),
                 Tables\Columns\TextColumn::make('divisi'),
-             Tables\Columns\TextColumn::make('pic.nama')->label('PIC')->default('-')->searchable(),
+                Tables\Columns\TextColumn::make('pic.nama')->label('PIC')->default('-')->searchable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'success' => false,
@@ -191,52 +193,75 @@ class SOWResource extends Resource
                     ]),
             ])
         ->headerActions([
-    Action::make('export')
-        ->label('Export')
-        ->icon('heroicon-o-arrow-down-tray')
-        ->color('primary')
-        ->disabled(fn () => Sow::whereNull('status')->orWhere('status', true)->exists())
-        ->action(function () {
+            Action::make('export')
+                ->label('Export')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->disabled(fn () => Sow::whereNull('status')->orWhere('status', true)->exists())
+                ->action(function () {
 
-                    $tanggal = now()->format('d-m-Y');
-                    $namaFile = "data-sow-{$tanggal}.xlsx";
+                            $tanggal = now()->format('d-m-Y');
+                            $namaFile = "data-sow-{$tanggal}.xlsx";
 
-                    return Excel::download(
-                        new SowExport(),
-                        $namaFile
-                    );
+                            return Excel::download(
+                                new SowExport(),
+                                $namaFile
+                            );
+                        }),
+
+            Action::make('accept')
+                ->label('Accept')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->requiresConfirmation()
+                ->action(function () {
+                    Sow::query()->update(['status' => false]);
+                    Notification::make()
+                        ->title('Semua data berhasil di Accept')
+                        ->success()
+                        ->send();
                 }),
 
-    Action::make('accept')
-        ->label('Accept')
-        ->icon('heroicon-o-check-circle')
-        ->color('success')
-        ->requiresConfirmation()
-        ->action(function () {
-            Sow::query()->update(['status' => false]);
-            Notification::make()
-                ->title('Semua data berhasil di Accept')
-                ->success()
-                ->send();
-        }),
+           Action::make('arsipkan')
+                    ->label('Arsipkan')
+                    ->icon('heroicon-o-archive-box')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\TextInput::make('judul')->label('Judul Arsip')->required(),
+                    ])
+                    ->disabled(fn () => Sow::whereNull('status')->orWhere('status', true)->exists())
+                    ->requiresConfirmation()
+                    ->action(function (array $data) {
+                        if (Sow::count() === 0) {
+                            Notification::make()->title('Data SOW kosong')->danger()->send();
+                            return;
+                        }
 
-    Action::make('arsip')
-        ->label('Arsip')
-        ->icon('heroicon-o-archive-box')
-        ->color('warning')
-        ->disabled(fn () => Sow::whereNull('status')->orWhere('status', true)->exists())
-        ->requiresConfirmation()
-        ->action(function () {
-            Sow::query()->update([
-                'is_archived' => true,
-                'arsip_at' => now(),
-            ]);
-            Notification::make()
-                ->title('Semua data berhasil di Arsipkan')
-                ->success()
-                ->send();
-        }),
-])
+                        $arsip = SowArsip::create(['judul' => $data['judul']]);
+
+                        Sow::chunk(50, function ($sows) use ($arsip) {
+                            foreach ($sows as $sow) {
+                                SowArsipItem::create([
+                                    'sow_arsip_id' => $arsip->id,
+                                    'inventaris_id' => $sow->inventaris_id,
+                                    'tanggal_penggunaan' => $sow->tanggal_penggunaan,
+                                    'tanggal_perbaikan' => $sow->tanggal_perbaikan,
+                                    'helpdesk' => $sow->helpdesk,
+                                    'form' => $sow->form,
+                                    'nomor_perbaikan' => $sow->nomor_perbaikan,
+                                    'hostname' => $sow->hostname,
+                                    'divisi' => $sow->divisi,
+                                    'keterangan' => $sow->keterangan,
+                                    'pic' => $sow->pic->nama,
+                                ]);
+                            }
+                        });
+
+                        Sow::truncate();
+
+                        Notification::make()->title('Data berhasil diarsipkan')->success()->send();
+                    }),
+            ])
 
             ->actions([
                 Tables\Actions\ActionGroup::make([
